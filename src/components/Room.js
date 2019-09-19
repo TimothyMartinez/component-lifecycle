@@ -1,4 +1,5 @@
-import React, { Component } from 'react'
+import React from 'react'
+import Person from './Person';
 
 class Room extends React.Component {
   constructor(props){
@@ -10,8 +11,15 @@ class Room extends React.Component {
     }
   }
 
-  componentWillMount() {
-    this.fetchPerson()
+  newVisit = () => {
+    this.setState({totalVisits: this.state.totalVisits + 1, loading: true})
+  }
+
+  removePerson = id => {
+    // console.log("remove person with id", id)
+    this.setState({
+      people: this.state.people.filter(person => person.id !== id)
+    })
   }
 
   fetchPerson = () => {
@@ -28,14 +36,35 @@ class Room extends React.Component {
             }
           )
         })
-        console.log(newPerson)
+        this.setState({
+          people: [...this.state.people, ...newPerson],
+          totalVisits: this.state.people.length + newPerson.length,
+          loading: false
+        })
       })
   }
 
+  componentDidMount() {
+    this.fetchPerson()
+  }
+
+  componentDidUpdate(_, prevState) {
+    if(this.state.totalVisits > prevState.totalVisits && this.state.loading){
+      this.fetchPerson()
+    }
+  }
+
   render(){
+    const {people, loading} = this.state
     return(
       <div className="room-container">
-        Hello there
+        <button onClick={this.newVisit}>New Visitor</button>
+        {
+          people.map(person => (
+            <Person {...person} key={person.id} remove={this.removePerson}/>
+          ))
+        }
+        {loading && <Person pending />}
       </div>
     )
   }
